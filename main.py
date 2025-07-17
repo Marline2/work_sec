@@ -39,7 +39,7 @@ def get_companyfacts(company_code: str, year: int):
     response = utils.get_companyfacts(company_code, year)
     return response
 
-@app.get("/getFinData/{company_code}/", status_code=status.HTTP_200_OK,
+@app.get("/getFinData/{company_code}/", response_model=List[Company.YahooFinClosePrice], status_code=status.HTTP_200_OK,
          responses={
         # 예외 상황을 Swagger UI에 명시
         400: {"description": "잘못된 요청 (Invalid Input)", "model": Response.ErrorResponseModel}, # 또는 에러 모델

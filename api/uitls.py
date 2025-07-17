@@ -134,9 +134,13 @@ def get_companyfacts(company_code: str, year: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"함수 내부 처리 오류: {e}")
 
-def get_fin_data(company_code: str):
+def get_fin_data(company_code: str, year: int):
     try:
-        response = Contract.get_yahoofin_close_price(company_code)
+        end_Date = datetime.now()
+        start_date = end_Date.replace(year=end_Date.year - year).strftime("%Y-%m-%d")
+
+        end_Date = end_Date.strftime("%Y-%m-%d")
+        response = Contract.get_yahoofin_close_price(company_code, start_date, end_Date)
         return response
     except HTTPException as e:
         raise e

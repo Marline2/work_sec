@@ -94,14 +94,14 @@ def get_sec_companyfacts(company_code: str):
         )
     
 # 야후핀에서 스크랩핑
-def get_yahoofin_close_price(company_code: str):
+def get_yahoofin_close_price(company_code: str, start_date: str, end_date: str):
     # 20순위 추출
     try:
         all_data = []
 
         asset = yf.Ticker(company_code)
         label = asset.info.get('shortName', company_code)
-        df = asset.history(period='1y')
+        df = asset.history(start=start_date, end=end_date)
         df = df[['Close']].rename(columns={'Close': label})
         df.index = df.index.tz_localize(None)  # 시간대 정보 제거
 

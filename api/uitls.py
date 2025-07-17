@@ -9,6 +9,16 @@ from fastapi.responses import JSONResponse
 from datetime import datetime
 from fastapi import HTTPException
 from bs4 import BeautifulSoup
+from .common.static import score_mapping
+
+from dotenv import load_dotenv
+import os
+
+from alpha_vantage.alphaintelligence import AlphaIntelligence
+
+load_dotenv()
+
+aplgha_key = os.getenv('ALPHAVANTAGE_KEY')
 
 def get_companies():
     try:
@@ -147,3 +157,64 @@ def get_fin_data(company_code: str, year: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"함수 내부 처리 오류: {e}")
     
+def get_sentiment_analysis(company_code: str):
+    try:
+        response = Contract.get_alpha_sentiment_analysis(company_code)
+        # 감성분석: feed 객체의 title, url, overall_sentiment_label만 추출
+        feeds = response.get("feed", [])
+        news_articles = []
+        for item in feeds:
+            news_articles.append({
+                'title':item.get("title"),
+                'url':item.get("url"),
+                'date':item.get('time_published'),
+                'sentiment':(
+                    "부정" if item.get("overall_sentiment_label") == 'Bearish'
+                    else "약간 부정" if item.get("overall_sentiment_label") == 'Somewhat-Bearish'
+                    else "중립" if item.get("overall_sentiment_label") == 'Neutral'
+                    else "약간 긍정" if item.get("overall_sentiment_label") == 'Somewhat-Bullish'
+                    else "긍정"
+                )
+            })
+
+        result = [
+            Company.CollectNews(
+                title=article['title'],
+                url=article['url'],
+                date=article['date'],
+                sentiment=article['sentiment']
+            )
+            for article in news_articles
+        ]
+            # 위 코드는 for row in news_articles:로 바꿔야 정상 동작합니다.
+
+        sentiment_counts = {"부정": 0, "약간 부정": 0, "중립": 0, "약간 긍정":0, "긍정":0}
+        for article in news_articles:
+            sentiment = article.get("sentiment")
+            if sentiment in sentiment_counts:
+                sentiment_counts[sentiment] += 1
+
+        print("Sentiment counts:", sentiment_counts)
+        total = sum(sentiment_counts.values())
+        sentiment_ratios = {k: v / total for k, v in sentiment_counts.items()}
+
+        print("Sentiment ratios:", sentiment_ratios)
+        total_score = (
+            sentiment_ratios.get('긍정', 0) * score_mapping['긍정'] +
+            sentiment_ratios.get('약간 긍정', 0) * score_mapping['약간 긍정'] +
+            sentiment_ratios.get('중립', 0) * score_mapping['중립'] +
+            sentiment_ratios.get('약간 부정', 0) * score_mapping['약간 부정'] +
+            sentiment_ratios.get('부정', 0) * score_mapping['부정']
+        )
+        print(total_score)
+
+        # CollectNews 객체는 JSON 직렬화가 불가하므로 dict로 변환
+        return JSONResponse(content={
+            "total_score": total_score,
+            "result": [article.dict() for article in result]
+        })
+    
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"함수 내부 처리 오류: {e}")

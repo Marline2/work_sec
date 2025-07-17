@@ -31,3 +31,10 @@ class YahooFinClosePrice(BaseModel):
     """야후핀에서 가져오는 종가 모델"""
     date: str
     close_value: float
+
+class CollectNews(BaseModel):
+    """Aplha에서 긁어온 뉴스 기사"""
+    title: str
+    url: str
+    date: str
+    sentiment: str

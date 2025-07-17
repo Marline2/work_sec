@@ -3,6 +3,12 @@ from fastapi import HTTPException
 import yfinance as yf
 import pandas as pd
 from api.models.Company import YahooFinClosePrice
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+aplgha_key = os.getenv('ALPHAVANTAGE_KEY')
 
 
 HEADERS = {
@@ -66,7 +72,6 @@ def get_sec_company():
     
 # SEC에서 스크랩핑
 def get_sec_companyfacts(company_code: str):
-    # 20순위 추출
     try:
         url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{company_code}.json"
         response = requests.get(url, headers=HEADERS)
@@ -95,7 +100,6 @@ def get_sec_companyfacts(company_code: str):
     
 # 야후핀에서 스크랩핑
 def get_yahoofin_close_price(company_code: str, start_date: str, end_date: str):
-    # 20순위 추출
     try:
         all_data = []
 
@@ -136,3 +140,32 @@ def get_yahoofin_close_price(company_code: str, start_date: str, end_date: str):
             status_code=500,
             detail=f"야후핀 통신 중, 알 수 없는 오류 발생: {e}"
         )
+    
+# Alphavantage 뉴스 및 감성분석 호출
+def get_alpha_sentiment_analysis(company_code: str):
+    try:
+        url = f"https://www.alphavantage.co/query?function=NEWS_SENTIMENT&tickers={company_code}&apikey={aplgha_key}"
+        response = requests.get(url)
+        response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
+
+        return response.json()
+    
+    except requests.exceptions.HTTPError as e:
+        status_code = e.response.status_code if e.response is not None else 500
+        raise HTTPException(
+            status_code=status_code,
+            detail=f"Alpha에서 데이터를 가져오는 중 HTTP 오류 발생: {e.response.reason}"
+        )
+    except requests.exceptions.RequestException as e:
+        # HTTPError 외의 requests 관련 모든 예외 (연결 오류, 타임아웃 등) 처리
+        raise HTTPException(
+            status_code=503, # Service Unavailable
+            detail=f"Alpha 연결 오류 또는 응답 없음: {e}"
+        )
+    except Exception as e:
+        # 예상치 못한 기타 모든 예외 처리
+        raise HTTPException(
+            status_code=500,
+            detail=f"통신 중, 알 수 없는 오류 발생: {e}"
+        )
+    

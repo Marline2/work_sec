@@ -47,7 +47,8 @@ def get_companies():
         result = []
         for _, row in filtered_df.iterrows():
             result.append(Company.Company(
-                cik_str=str(row['cik_str']),
+                sec_code=str(row['cik_str']),
+                ticker_code=row['ticker'],
                 title=row['title']
             ))
     
@@ -132,3 +133,13 @@ def get_companyfacts(company_code: str, year: int):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"함수 내부 처리 오류: {e}")
+
+def get_fin_data(company_code: str):
+    try:
+        response = Contract.get_yahoofin_close_price(company_code)
+        return response
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"함수 내부 처리 오류: {e}")
+    

@@ -8,7 +8,8 @@ class TopCompany(BaseModel):
 
 class Company(BaseModel):
     """회사 기본 정보 모델"""
-    cik_str: str
+    sec_code: str
+    ticker_code: str
     title: str
 
 class CompanyFactRecord(BaseModel):
@@ -25,3 +26,8 @@ class CompanyFactRecord(BaseModel):
     fil_document: Optional[str] = None
     fil_date: Optional[str] = None
     accession_number: Optional[str] = None
+
+class YahooFinClosePrice(BaseModel):
+    """야후핀에서 가져오는 종가 모델"""
+    date: str
+    close_value: float

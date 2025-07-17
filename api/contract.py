@@ -1,5 +1,8 @@
 import requests
 from fastapi import HTTPException
+import yfinance as yf
+import pandas as pd
+from api.models.Company import YahooFinClosePrice
 
 
 HEADERS = {
@@ -61,7 +64,7 @@ def get_sec_company():
             detail=f"통신 중, 알 수 없는 오류 발생: {e}"
         )
     
-# 한경뉴스에서 스크랩핑
+# SEC에서 스크랩핑
 def get_sec_companyfacts(company_code: str):
     # 20순위 추출
     try:
@@ -88,4 +91,48 @@ def get_sec_companyfacts(company_code: str):
         raise HTTPException(
             status_code=500,
             detail=f"통신 중, 알 수 없는 오류 발생: {e}"
+        )
+    
+# 야후핀에서 스크랩핑
+def get_yahoofin_close_price(company_code: str):
+    # 20순위 추출
+    try:
+        all_data = []
+
+        asset = yf.Ticker(company_code)
+        label = asset.info.get('shortName', company_code)
+        df = asset.history(period='1y')
+        df = df[['Close']].rename(columns={'Close': label})
+        df.index = df.index.tz_localize(None)  # 시간대 정보 제거
+
+        # Date 인덱스를 컬럼으로 변환하고 문자열로 yyyy-mm-dd 포맷으로 변환
+        df = df.reset_index()
+        df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')
+
+        for _, row in df.iterrows():
+            all_data.append(
+                YahooFinClosePrice(
+                    date=row['Date'],
+                    close_value=float(row[label])
+                )
+            )
+
+        return all_data
+    except requests.exceptions.HTTPError as e:
+        status_code = e.response.status_code if e.response is not None else 500
+        raise HTTPException(
+            status_code=status_code,
+            detail=f"야후핀에서 데이터를 가져오는 중 HTTP 오류 발생: {e.response.reason}"
+        )
+    except requests.exceptions.RequestException as e:
+        # HTTPError 외의 requests 관련 모든 예외 (연결 오류, 타임아웃 등) 처리
+        raise HTTPException(
+            status_code=503, # Service Unavailable
+            detail=f"야후핀 연결 오류 또는 응답 없음: {e}"
+        )
+    except Exception as e:
+        # 예상치 못한 기타 모든 예외 처리
+        raise HTTPException(
+            status_code=500,
+            detail=f"야후핀 통신 중, 알 수 없는 오류 발생: {e}"
         )

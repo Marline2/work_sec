@@ -1,0 +1,91 @@
+import requests
+from fastapi import HTTPException
+
+
+HEADERS = {
+    'User-Agent': "1MyCompany MyName my.emai1l@example.com",
+    'From': '1my.email@example.com'
+}
+
+# 한경뉴스에서 스크랩핑
+def get_top20_sp500():
+    # 20순위 추출
+    try:
+        url = "https://www.hankyung.com/globalmarket/usa-stock-sp500"
+        response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
+        return response
+    
+    except requests.exceptions.HTTPError as e:
+        status_code = e.response.status_code if e.response is not None else 500
+        raise HTTPException(
+            status_code=status_code,
+            detail=f"한경닷컴에서 데이터를 가져오는 중 HTTP 오류 발생: {e.response.reason}"
+        )
+    except requests.exceptions.RequestException as e:
+        # HTTPError 외의 requests 관련 모든 예외 (연결 오류, 타임아웃 등) 처리
+        raise HTTPException(
+            status_code=503, # Service Unavailable
+            detail=f"한경닷컴 연결 오류 또는 응답 없음: {e}"
+        )
+    except Exception as e:
+        # 예상치 못한 기타 모든 예외 처리
+        raise HTTPException(
+            status_code=500,
+            detail=f"알 수 없는 오류 발생: {e}"
+        )
+    
+# SEC에서 회사 정보 얻기기
+def get_sec_company():
+    # 20순위 추출
+    try:
+        response = requests.get("https://www.sec.gov/files/company_tickers.json",
+                   headers={"User-Agent":"your@email.com"}).json()
+        return response
+    except requests.exceptions.HTTPError as e:
+        status_code = e.response.status_code if e.response is not None else 500
+        raise HTTPException(
+            status_code=status_code,
+            detail=f"SEC에서 데이터를 가져오는 중 HTTP 오류 발생: {e.response.reason}"
+        )
+    except requests.exceptions.RequestException as e:
+        # HTTPError 외의 requests 관련 모든 예외 (연결 오류, 타임아웃 등) 처리
+        raise HTTPException(
+            status_code=503, # Service Unavailable
+            detail=f"SEC 연결 오류 또는 응답 없음: {e}"
+        )
+    except Exception as e:
+        # 예상치 못한 기타 모든 예외 처리
+        raise HTTPException(
+            status_code=500,
+            detail=f"통신 중, 알 수 없는 오류 발생: {e}"
+        )
+    
+# 한경뉴스에서 스크랩핑
+def get_sec_companyfacts(company_code: str):
+    # 20순위 추출
+    try:
+        url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{company_code}.json"
+        response = requests.get(url, headers=HEADERS)
+        response.raise_for_status()  # HTTP 오류 발생 시 예외 발생
+
+        return response.json()
+    
+    except requests.exceptions.HTTPError as e:
+        status_code = e.response.status_code if e.response is not None else 500
+        raise HTTPException(
+            status_code=status_code,
+            detail=f"SEC에서 데이터를 가져오는 중 HTTP 오류 발생: {e.response.reason}"
+        )
+    except requests.exceptions.RequestException as e:
+        # HTTPError 외의 requests 관련 모든 예외 (연결 오류, 타임아웃 등) 처리
+        raise HTTPException(
+            status_code=503, # Service Unavailable
+            detail=f"SEC 연결 오류 또는 응답 없음: {e}"
+        )
+    except Exception as e:
+        # 예상치 못한 기타 모든 예외 처리
+        raise HTTPException(
+            status_code=500,
+            detail=f"통신 중, 알 수 없는 오류 발생: {e}"
+        )

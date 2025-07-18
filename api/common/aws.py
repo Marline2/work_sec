@@ -3,6 +3,7 @@ import boto3
 from botocore.exceptions import ClientError
 from dotenv import load_dotenv
 import os
+import io
 
 load_dotenv()
 
@@ -23,6 +24,18 @@ def upload_csv_to_s3(data: list[dict], title: str):
         )
 
         return f"https://{aws_bucket}.s3.{aws_region}.amazonaws.com/{title}"
+    except ClientError as e:
+        print(f"S3 업로드 중 오류 발생: {e}")
+        return False
+    
+def get_s3_to_dataframe(title: str):
+    s3_client = boto3.client('s3', aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+    try:
+        response=s3_client.get_object(
+            Bucket=aws_bucket,
+            Key=title, #파일명
+        )
+        return pd.read_csv(io.BytesIO(response['Body'].read()))
     except ClientError as e:
         print(f"S3 업로드 중 오류 발생: {e}")
         return False

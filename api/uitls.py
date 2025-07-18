@@ -14,13 +14,12 @@ from .common.static import score_mapping
 from dotenv import load_dotenv
 import os
 
-from alpha_vantage.alphaintelligence import AlphaIntelligence
-
 load_dotenv()
 
 aplgha_key = os.getenv('ALPHAVANTAGE_KEY')
 
-def get_companies():
+# S&P500 시가총액 상위 20개 csv 파일로 저장, 하루에 한 번 돌리기
+def upload_company_list():
     try:
         # 한경뉴스에서 상위 20개 스크랩핑
         response = Contract.get_top20_sp500()
@@ -36,7 +35,30 @@ def get_companies():
             
             market_cap_tds = soup.find_all('td', class_='txt-rt col6 col-pc')
             market_cap = market_cap_tds[i-1].find('span').text.strip().replace(',', '')
-            companies.append(Company.TopCompany(symbol=symbol, market_cap=float(market_cap)))
+            companies.append([symbol, float(market_cap)])
+        companies = pd.DataFrame(companies, columns=['symbol', 'market_cap'])\
+                        .sort_values(by='market_cap', ascending=False).reset_index(drop=True)
+        Aws.upload_csv_to_s3(companies, 'SP500_TOP20.csv')
+        return True
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"함수 내부 처리 오류: {e}")
+
+def get_companies():
+    try:
+        # 저장된 S&P500 회사 리스트 가져오기
+        top20_companies = Aws.get_s3_to_dataframe('SP500_TOP20.csv')
+        # DataFrame을 Company 모델에 맞는 리스트로 변환
+        top20_companies = [
+            Company.TopCompany(
+                symbol=row['symbol'], 
+                market_cap=row['market_cap'],
+            )
+            for _, row in top20_companies.iterrows()
+        ]
+
+        print(top20_companies)
         #companies.sort(key=lambda x: x.market_cap, reverse=True) 시가총액 내림차순
 
         # SEC에서 회사 정보 추출
@@ -44,7 +66,7 @@ def get_companies():
         response_df = pd.DataFrame.from_dict(response, orient="index")[["cik_str", "title", "ticker"]]
         
         # symbol에 "." 기호가 있으면 "-"로 변경
-        symbols = [company.symbol.replace('.', '-') for company in companies]
+        symbols = [company.symbol.replace('.', '-') for company in top20_companies]
         print(f"총 symbol: {len(symbols)}")
         filtered_df = response_df[response_df["ticker"].isin(symbols)]
         print(f"매칭된 회사 수: {len(filtered_df)}")
@@ -196,6 +218,8 @@ def get_sentiment_analysis(company_code: str):
 
         print("Sentiment counts:", sentiment_counts)
         total = sum(sentiment_counts.values())
+        if total == 0:
+            raise HTTPException(status_code=500, detail="함수 내부 처리 오류: division by zero")
         sentiment_ratios = {k: v / total for k, v in sentiment_counts.items()}
 
         print("Sentiment ratios:", sentiment_ratios)

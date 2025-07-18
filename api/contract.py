@@ -44,7 +44,7 @@ def get_top20_sp500():
             detail=f"알 수 없는 오류 발생: {e}"
         )
     
-# SEC에서 회사 정보 얻기기
+# SEC에서 회사 정보 얻기
 def get_sec_company():
     # 20순위 추출
     try:

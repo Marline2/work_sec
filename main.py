@@ -1,4 +1,4 @@
-from fastapi import FastAPI, status 
+from fastapi import FastAPI, status, Path
 from typing import List
 
 import api.uitls as utils
@@ -11,8 +11,21 @@ app = FastAPI()
 def read_root():
     return {"message": "Hello FastAPI!"}
 
+# S&P500 상위 회사 시가 총액으로 20개 추출 후 csv 저장
+@app.post("/uploadCompanyList", summary="S&P500 시가 총액 상위인 20개의의 회사를 저장합니다. (프론트는 호출하지 않습니다.)", status_code=status.HTTP_200_OK,
+                 responses={
+        # 예외 상황을 Swagger UI에 명시
+        400: {"description": "잘못된 요청 (Invalid Input)", "model": Response.ErrorResponseModel}, # 또는 에러 모델
+        404: {"description": "리소스를 찾을 수 없음 (Not Found)", "model": Response.ErrorResponseModel},
+        500: {"description": "서버 내부 오류 (Internal Server Error)", "model": Response.ErrorResponseModel}
+        # 필요하다면 다른 상태 코드도 추가 (예: 403 Forbidden, 401 Unauthorized 등)
+    })
+def upload_company_list():
+    response = utils.upload_company_list()
+    return response
+
 # S&P500 상위 회사 시가 총액으로 20개 추출
-@app.get("/getCompanies", response_model=List[Company.Company], status_code=status.HTTP_200_OK,
+@app.get("/getCompanies", summary="S&P500 시가 총액 상위인 20개의 회사를 가져옵니다. ", response_model=List[Company.Company], status_code=status.HTTP_200_OK,
         responses={
         # 예외 상황을 Swagger UI에 명시
         400: {"description": "잘못된 요청 (Invalid Input)", "model": Response.ErrorResponseModel}, # 또는 에러 모델
@@ -26,7 +39,7 @@ def get_top_sp500_companies():
     return response
 
 # 회사명 받아오면 company 코드 가져오기
-@app.get("/getCompanyFacts/{sec_code}/{year}/", response_model=List[Company.CompanyFactRecord], status_code=status.HTTP_200_OK,
+@app.get("/getCompanyFacts/{sec_code}/{years_ago}/", summary="SEC에서 회사 정보를 가져옵니다. ", response_model=List[Company.CompanyFactRecord], status_code=status.HTTP_200_OK,
          responses={
         # 예외 상황을 Swagger UI에 명시
         400: {"description": "잘못된 요청 (Invalid Input)", "model": Response.ErrorResponseModel}, # 또는 에러 모델
@@ -34,12 +47,18 @@ def get_top_sp500_companies():
         500: {"description": "서버 내부 오류 (Internal Server Error)", "model": Response.ErrorResponseModel}
         # 필요하다면 다른 상태 코드도 추가 (예: 403 Forbidden, 401 Unauthorized 등)
     })
-def get_companyfacts(sec_code: str, year: int):
+def get_companyfacts(sec_code: str, years_ago : int = Path(
+        ..., # 필수 파라미터임을 나타냅니다.
+        description="""
+            현재로부터 몇 년 전 데이터를 가져올지 나타냅니다. \n
+            1년 전부터면 숫자 1을 넣으시면 됩니다. 숫자 5를 넣으면 5년 전부터의 데이터를 가져옵니다.
+        """
+    )):
     # SEC에서 데이터 가져오기
-    response = utils.get_companyfacts(sec_code, year)
+    response = utils.get_companyfacts(sec_code, years_ago)
     return response
 
-@app.get("/getFinData/{ticker_code}/{year}/", response_model=List[Company.YahooFinClosePrice], status_code=status.HTTP_200_OK,
+@app.get("/getFinData/{ticker_code}/{years_ago}/", summary="기간에 해당되는 주식 종가를 가져옵니다. ", response_model=List[Company.YahooFinClosePrice], status_code=status.HTTP_200_OK,
          responses={
         # 예외 상황을 Swagger UI에 명시
         400: {"description": "잘못된 요청 (Invalid Input)", "model": Response.ErrorResponseModel}, # 또는 에러 모델
@@ -47,12 +66,18 @@ def get_companyfacts(sec_code: str, year: int):
         500: {"description": "서버 내부 오류 (Internal Server Error)", "model": Response.ErrorResponseModel}
         # 필요하다면 다른 상태 코드도 추가 (예: 403 Forbidden, 401 Unauthorized 등)
     })
-def get_fin_data(ticker_code: str, year: int):
+def get_fin_data(ticker_code: str, years_ago: int = Path(
+        ..., # 필수 파라미터임을 나타냅니다.
+        description="""
+            현재로부터 몇 년 전 데이터를 가져올지 나타냅니다. \n
+            1년 전부터면 숫자 1을 넣으시면 됩니다. 숫자 5를 넣으면 5년 전부터의 데이터를 가져옵니다.
+        """
+    )):
     # SEC에서 데이터 가져오기
-    response = utils.get_fin_data(ticker_code, year)
+    response = utils.get_fin_data(ticker_code, years_ago)
     return response
 
-@app.get("/getSentimentAnalysis/{ticker_code}/", response_model=List[Company.CollectNews], status_code=status.HTTP_200_OK,
+@app.get("/getSentimentAnalysis/{ticker_code}/", summary="최근 기사 50개와 매수 점수를 가져옵니다. ", response_model=List[Company.CollectNews], status_code=status.HTTP_200_OK,
          responses={
         # 예외 상황을 Swagger UI에 명시
         400: {"description": "잘못된 요청 (Invalid Input)", "model": Response.ErrorResponseModel}, # 또는 에러 모델

@@ -1,7 +1,7 @@
 score_mapping = {
-    '긍정': 10,           # 가장 긍정적
-    '약간 긍정': 7.5,  # 약간 긍정적
-    '중립': 5,  
-    '약간 부정': 2.5,    # 중립
-    '부정': 0             # 부정적
+    'Bullish': 10,           # 가장 긍정적
+    'Somewhat-Bullish': 7.5,  # 약간 긍정적
+    'Neutral': 5,  
+    'Somewhat-Bearish': 2.5,    # 중립
+    'Bearish': 0             # 부정적
 }

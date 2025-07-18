@@ -57,13 +57,14 @@ def get_companies():
             )
             for _, row in top20_companies.iterrows()
         ]
-
-        print(top20_companies)
         #companies.sort(key=lambda x: x.market_cap, reverse=True) 시가총액 내림차순
 
         # SEC에서 회사 정보 추출
         response = Contract.get_sec_company()
         response_df = pd.DataFrame.from_dict(response, orient="index")[["cik_str", "title", "ticker"]]
+        # cik_str이 10글자가 아니면 앞에 0을 붙여서 10글자로 만듦
+        response_df["cik_str"] = response_df["cik_str"].apply(lambda x: str(x).zfill(10))
+        print(response_df)
         
         # symbol에 "." 기호가 있으면 "-"로 변경
         symbols = [company.symbol.replace('.', '-') for company in top20_companies]
@@ -190,13 +191,7 @@ def get_sentiment_analysis(company_code: str):
                 'title':item.get("title"),
                 'url':item.get("url"),
                 'date':item.get('time_published'),
-                'sentiment':(
-                    "부정" if item.get("overall_sentiment_label") == 'Bearish'
-                    else "약간 부정" if item.get("overall_sentiment_label") == 'Somewhat-Bearish'
-                    else "중립" if item.get("overall_sentiment_label") == 'Neutral'
-                    else "약간 긍정" if item.get("overall_sentiment_label") == 'Somewhat-Bullish'
-                    else "긍정"
-                )
+                'sentiment': item.get('overall_sentiment_label')
             })
 
         result = [
@@ -210,7 +205,7 @@ def get_sentiment_analysis(company_code: str):
         ]
             # 위 코드는 for row in news_articles:로 바꿔야 정상 동작합니다.
 
-        sentiment_counts = {"부정": 0, "약간 부정": 0, "중립": 0, "약간 긍정":0, "긍정":0}
+        sentiment_counts = {"Bearish": 0, "Somewhat-Bearish": 0, "Neutral": 0, "Somewhat-Bullish":0, "Bullish":0}
         for article in news_articles:
             sentiment = article.get("sentiment")
             if sentiment in sentiment_counts:
@@ -224,18 +219,18 @@ def get_sentiment_analysis(company_code: str):
 
         print("Sentiment ratios:", sentiment_ratios)
         total_score = (
-            sentiment_ratios.get('긍정', 0) * score_mapping['긍정'] +
-            sentiment_ratios.get('약간 긍정', 0) * score_mapping['약간 긍정'] +
-            sentiment_ratios.get('중립', 0) * score_mapping['중립'] +
-            sentiment_ratios.get('약간 부정', 0) * score_mapping['약간 부정'] +
-            sentiment_ratios.get('부정', 0) * score_mapping['부정']
+            sentiment_ratios.get('Bullish', 0) * score_mapping['Bullish'] +
+            sentiment_ratios.get('Somewhat-Bullish', 0) * score_mapping['Somewhat-Bullish'] +
+            sentiment_ratios.get('Neutral', 0) * score_mapping['Neutral'] +
+            sentiment_ratios.get('Somewhat-Bearish', 0) * score_mapping['Somewhat-Bearish'] +
+            sentiment_ratios.get('Bearish', 0) * score_mapping['Bearish']
         )
         print(total_score)
 
         # CollectNews 객체는 JSON 직렬화가 불가하므로 dict로 변환
         return JSONResponse(content={
             "total_score": total_score,
-            "result": [article.dict() for article in result]
+            "result": [article.model_dump() for article in result]
         })
     
     except HTTPException as e:

@@ -33,7 +33,6 @@ def get_reuters_fin_news(search: str):
 
         sign_btn.click()
         time.sleep(5)
-        sb.save_screenshot_to_logs(name="after_login") 
         # 로그인 종료
 
         sb.open(search_urls)

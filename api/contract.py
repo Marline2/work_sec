@@ -3,6 +3,7 @@ from fastapi import HTTPException
 import yfinance as yf
 import pandas as pd
 from api.models.Company import YahooFinClosePrice
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import os
 

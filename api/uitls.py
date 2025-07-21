@@ -1,5 +1,6 @@
 
 import api.contract as Contract
+import api.selenium_contract as SeleniumContract
 import api.models.Company as Company
 import api.common.aws as Aws
 import pandas as pd
@@ -158,6 +159,7 @@ def get_companyfacts(company_code: str, year: int):
         # download_url을 result에 담고, res_df의 레코드 리스트를 따로 담아서 [{result}, {res_df}] 형태로 반환
         result = [{"download_url": download_url}]
  
+        # 기준 코드 아래 두 개
         records = res_df.to_dict(orient="records") 
         return JSONResponse(content=[result, records]) 
         # 원본 데이터를 필요한 형태로 1차 가공 및 집계
@@ -233,6 +235,19 @@ def get_sentiment_analysis(company_code: str):
             "result": [article.model_dump() for article in result]
         })
     
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"함수 내부 처리 오류: {e}")
+    
+def upload_rueters_news():
+    try:
+        # 리스트를 받아서 여기서 FOR문으로 돌아야 한다.
+        response = SeleniumContract.get_reuters_fin_news('NVIDIA')
+        created_date = datetime.now().strftime("%Y%m%d")
+        response = pd.DataFrame(response)
+        Aws.upload_csv_to_s3(response, f'NEWS_NVIDIA_{created_date}.csv')
+        return True
     except HTTPException as e:
         raise e
     except Exception as e:

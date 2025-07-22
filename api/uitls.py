@@ -3,6 +3,7 @@ import api.contract as Contract
 import api.selenium_contract as SeleniumContract
 import api.models.Company as Company
 import api.common.aws as Aws
+import api.common.rag as Rag
 import pandas as pd
 import copy
 
@@ -242,11 +243,30 @@ def get_sentiment_analysis(company_code: str):
     
 def upload_rueters_news():
     try:
-        # 리스트를 받아서 여기서 FOR문으로 돌아야 한다.
-        response = SeleniumContract.get_reuters_fin_news('NVIDIA')
+        # 리스트를 받아서 여기서 FOR문으로 돌아야 한다. 근데 티커값만 저장한다는 것이 문제. 한경닷컴도 이름은 없다.
+        response = SeleniumContract.get_reuters_stock_news('NVIDIA')
         created_date = datetime.now().strftime("%Y%m%d")
-        response = pd.DataFrame(response)
-        Aws.upload_csv_to_s3(response, f'NEWS_NVIDIA_{created_date}.csv')
+        Aws.upload_json_to_s3(response, f'NEWS_NVIDIA_{created_date}.json')
+
+        # 청크화
+        #Rag.get_gemini_token_count()
+        # 백터화
+        return True
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"함수 내부 처리 오류: {e}")
+
+def upload_all_rueters_news(start_date: str):
+    try:
+        # 리스트를 받아서 여기서 FOR문으로 돌아야 한다. 근데 티커값만 저장한다는 것이 문제. 한경닷컴도 이름은 없다.
+        response = SeleniumContract.get_reuters_fin_news(start_date)
+        created_date = datetime.now().strftime("%Y%m%d")
+        Aws.upload_json_to_s3(response, f'NEWS_{created_date}.json')
+
+        # 청크화
+        #Rag.get_gemini_token_count()
+        # 백터화
         return True
     except HTTPException as e:
         raise e

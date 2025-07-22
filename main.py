@@ -24,7 +24,7 @@ def upload_company_list():
     response = utils.upload_company_list()
     return response
 
-@app.post("/uploadReutersNews", summary="최근 6개월의 기사를 로이터에서 수집하고 저장합니다. (프론트를 호출하지 않습니다.)", status_code=status.HTTP_200_OK,
+@app.get("/uploadReutersNews", summary="최근 1개월의 기사를 로이터에서 수집하고 저장합니다. (프론트를 호출하지 않습니다.)", status_code=status.HTTP_200_OK,
          responses={
         # 예외 상황을 Swagger UI에 명시
         400: {"description": "잘못된 요청 (Invalid Input)", "model": Response.ErrorResponseModel}, # 또는 에러 모델
@@ -35,6 +35,24 @@ def upload_company_list():
 def upload_rueters_news():
     # SEC에서 데이터 가져오기
     response = utils.upload_rueters_news()
+    return response
+
+@app.get("/uploadReutersNewsAll/{start_date}", summary="최대 최근 1개월의 전체 기사를 로이터에서 수집하고 저장합니다. (프론트를 호출하지 않습니다.)", status_code=status.HTTP_200_OK,
+         responses={
+        # 예외 상황을 Swagger UI에 명시
+        400: {"description": "잘못된 요청 (Invalid Input)", "model": Response.ErrorResponseModel}, # 또는 에러 모델
+        404: {"description": "리소스를 찾을 수 없음 (Not Found)", "model": Response.ErrorResponseModel},
+        500: {"description": "서버 내부 오류 (Internal Server Error)", "model": Response.ErrorResponseModel}
+        # 필요하다면 다른 상태 코드도 추가 (예: 403 Forbidden, 401 Unauthorized 등)
+    })
+def upload_all_rueters_news(start_date: str= Path(
+        ..., # 필수 파라미터임을 나타냅니다.
+        description="""
+            기사 수집 시작일입니다. 입력 형식은 'YYYY-MM-DD' 입니다.
+        """
+    )):
+    # SEC에서 데이터 가져오기
+    response = utils.upload_all_rueters_news(start_date)
     return response
 
 

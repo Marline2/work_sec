@@ -54,3 +54,16 @@ def upload_json_to_s3(data: list[dict], title: str):
     except ClientError as e:
         print(f"S3 업로드 중 오류 발생: {e}")
         return False
+    
+def get_s3_to_json(title: str):
+    s3_client = boto3.client('s3', aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key)
+    try:
+        response = s3_client.get_object(
+            Bucket=aws_bucket,
+            Key=title, #파일명
+        )
+        json_bytes = response['Body'].read()
+        return json.loads(json_bytes.decode('utf-8-sig'))
+    except ClientError as e:
+        print(f"S3 업로드 중 오류 발생: {e}")
+        return False

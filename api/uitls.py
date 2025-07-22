@@ -1,6 +1,7 @@
 
 import api.contract as Contract
 import api.selenium_contract as SeleniumContract
+import api.common.rag as Rag
 import api.models.Company as Company
 import api.common.aws as Aws
 import pandas as pd

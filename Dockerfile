@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-liberation \
     libappindicator3-1 \
     libasound2 \
-    libatk-bridge22.0-0 \
+    libatk-bridge2.0-0 \
     libatk1.0-0 \
     libcairo2 \
     libcups2 \

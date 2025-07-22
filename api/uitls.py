@@ -3,7 +3,6 @@ import api.contract as Contract
 import api.selenium_contract as SeleniumContract
 import api.models.Company as Company
 import api.common.aws as Aws
-import api.common.rag as Rag
 import pandas as pd
 import copy
 

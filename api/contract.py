@@ -2,14 +2,18 @@ import requests
 from fastapi import HTTPException
 import yfinance as yf
 import pandas as pd
+from datetime import datetime
 from api.models.Company import YahooFinClosePrice
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from newsapi import NewsApiClient
+
 import os
 
 load_dotenv()
 
 aplgha_key = os.getenv('ALPHAVANTAGE_KEY')
+news_api_key = os.getenv('NEWS_API_KEY')
 
 
 HEADERS = {
@@ -170,3 +174,34 @@ def get_alpha_sentiment_analysis(company_code: str):
             detail=f"통신 중, 알 수 없는 오류 발생: {e}"
         )
     
+def get_news_api(query: str, page: int):
+    newsapi = NewsApiClient(api_key=news_api_key)
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    try:
+        all_articles = newsapi.get_everything(q=query,
+                                              sources='bloomberg, reuters, bbc-news, the-verge, business-insider',
+                                              language='en',
+                                              to=today_str,
+                                              sort_by='publishedAt',
+                                              page_size=20,
+                                              page=page)
+            
+        return all_articles
+    except requests.exceptions.HTTPError as e:
+        status_code = e.response.status_code if e.response is not None else 500
+        raise HTTPException(
+            status_code=status_code,
+            detail=f"News api에서 데이터를 가져오는 중 HTTP 오류 발생: {e.response.reason}"
+        )
+    except requests.exceptions.RequestException as e:
+        # HTTPError 외의 requests 관련 모든 예외 (연결 오류, 타임아웃 등) 처리
+        raise HTTPException(
+            status_code=503, # Service Unavailable
+            detail=f"News api 연결 오류 또는 응답 없음: {e}"
+        )
+    except Exception as e:
+        # 예상치 못한 기타 모든 예외 처리
+        raise HTTPException(
+            status_code=500,
+            detail=f"통신 중, 알 수 없는 오류 발생: {e}"
+        )

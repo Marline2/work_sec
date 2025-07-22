@@ -38,3 +38,11 @@ class CollectNews(BaseModel):
     url: str
     date: str
     sentiment: str
+
+class NewsAPI(BaseModel):
+    """NewsAPI에서 긁어온 뉴스 기사"""
+    title: str
+    url: str
+    image: str
+    publish: str
+    content: str

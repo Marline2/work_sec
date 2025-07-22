@@ -24,6 +24,19 @@ def upload_company_list():
     response = utils.upload_company_list()
     return response
 
+@app.get("/getNewsAPI/{query}/{page}", summary="News API를 사용하여 뉴스 정보를 가져옵니다.", response_model=List[Company.NewsAPI], status_code=status.HTTP_200_OK,
+         responses={
+        # 예외 상황을 Swagger UI에 명시
+        400: {"description": "잘못된 요청 (Invalid Input)", "model": Response.ErrorResponseModel}, # 또는 에러 모델
+        404: {"description": "리소스를 찾을 수 없음 (Not Found)", "model": Response.ErrorResponseModel},
+        500: {"description": "서버 내부 오류 (Internal Server Error)", "model": Response.ErrorResponseModel}
+        # 필요하다면 다른 상태 코드도 추가 (예: 403 Forbidden, 401 Unauthorized 등)
+    })
+def get_news_api(query: str, page: int):
+    # SEC에서 데이터 가져오기
+    response = utils.get_news_api(query, page)
+    return response
+
 @app.get("/uploadReutersNews", summary="(용량 부족으로 실행 불가) 최근 1개월의 기사를 로이터에서 수집하고 저장합니다. (프론트를 호출하지 않습니다.)", status_code=status.HTTP_200_OK,
          responses={
         # 예외 상황을 Swagger UI에 명시

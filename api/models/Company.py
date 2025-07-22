@@ -46,3 +46,4 @@ class NewsAPI(BaseModel):
     image: str
     publish: str
     content: str
+    source: str

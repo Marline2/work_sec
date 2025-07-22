@@ -9,8 +9,8 @@ RUN groupadd -g "${GID}" appgroup && \
 WORKDIR /app
 
 
-# --- 여기부터 Chrome 및 ChromeDriver 설치 코드 추가 ---
-# 1. Chrome 설치에 필요한 기본 패키지들 먼저 설치
+# --- Chrome 및 ChromeDriver 설치 시작 ---
+# Chrome 설치에 필요한 기본 패키지들 먼저 설치
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     gnupg \
@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     fonts-liberation \
     libappindicator3-1 \
     libasound2 \
-    libatk-bridge2.0-0 \
+    libatk-bridge22.0-0 \
     libatk1.0-0 \
     libcairo2 \
     libcups2 \
@@ -41,25 +41,23 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxkbcommon0 \
     libxrandr2 \
     libxrender1 \
-    libgbm-dev && \
-    # Google Chrome PPA (개인 패키지 아카이브) 추가
-    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /etc/apt/trusted.gpg.d/google-chrome.gpg && \
+    libgbm-dev
+
+# Google Chrome PPA (개인 패키지 아카이브) 추가 및 Chrome Stable 버전 설치
+RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /etc/apt/trusted.gpg.d/google-chrome.gpg && \
     echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
-    # apt-get 업데이트 후 Google Chrome Stable 버전 설치
     apt-get update && \
     apt-get install -y google-chrome-stable && \
-    # apt 캐시 정리하여 이미지 크기 줄이기
     rm -rf /var/lib/apt/lists/*
 
-# 2. 설치된 Chrome 버전에 맞는 ChromeDriver 자동 다운로드 및 설치
-# 이 부분은 Chrome 업데이트 시 ChromeDriver도 함께 최신으로 유지되도록 도와줍니다.
+# 설치된 Chrome 버전에 맞는 ChromeDriver 자동 다운로드 및 설치
 RUN CHROME_VERSION=$(google-chrome --version | sed -E 's/Google Chrome ([0-9]+)\..*/\1/') && \
     CHROMEDRIVER_VERSION=$(wget -qO- "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_${CHROME_VERSION}") && \
     wget -q https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip -O /tmp/chromedriver.zip && \
     unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
     chmod +x /usr/local/bin/chromedriver && \
     rm /tmp/chromedriver.zip
-# --- Chrome 및 ChromeDriver 설치 코드 끝 ---
+# --- Chrome 및 ChromeDriver 설치 끝 ---
 
 RUN apt-get update && \
     pip install --upgrade pip

@@ -11,7 +11,7 @@ WORKDIR /app
 
 # --- Chrome 및 ChromeDriver 설치 시작 ---
 # Chrome 설치에 필요한 기본 패키지들 먼저 설치
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update &&  apt-get clean && apt-get install -y --no-install-recommends \
     wget \
     gnupg \
     unzip \

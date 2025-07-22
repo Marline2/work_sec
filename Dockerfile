@@ -14,6 +14,9 @@ RUN apt-get update && \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# 셀리니움 임시 파일 생성
+RUN mkdir -p /app/downloaded_files && chown appuser:appgroup /app/downloaded_files
+
 USER appuser:appgroup
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1

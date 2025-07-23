@@ -368,3 +368,27 @@ def get_headline_news_api(query: str, page:int):
         raise e
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"함수 내부 처리 오류: {e}")
+    
+# 뉴스 API 가져오기
+def get_event_news_api(query: str, page:int):
+    try:
+        # 리스트를 받아서 여기서 FOR문으로 돌아야 한다. 근데 티커값만 저장한다는 것        response = SeleniumContract.get_reuters_fin_news(start_date)
+        res = Contract.get_event_news_api(query, page)
+                # all_articles에서 title, url, image, publish, content만 추출
+
+        response = [
+            Company.NewsAPI(
+                title=article['title'],
+                url=article['url'],
+                image=article['image'],
+                publish=article['publish'],
+                content=article['content'],
+                source=article['source']
+        )
+            for article in res
+        ]
+        return response
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"함수 내부 처리 오류: {e}")

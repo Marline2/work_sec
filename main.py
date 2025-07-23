@@ -4,6 +4,8 @@ from typing import List
 import api.uitls as utils
 import api.models.Company as Company
 import api.models.Response as Response
+from eventregistry import *
+
 
 app = FastAPI()
 
@@ -22,6 +24,19 @@ def read_root():
     })
 def upload_company_list():
     response = utils.upload_company_list()
+    return response
+
+@app.get("/getEventNewsAPI/{query}/{page}", summary="News API를 사용하여 뉴스 정보를 가져옵니다.", response_model=List[Company.NewsAPI], status_code=status.HTTP_200_OK,
+         responses={
+        # 예외 상황을 Swagger UI에 명시
+        400: {"description": "잘못된 요청 (Invalid Input)", "model": Response.ErrorResponseModel}, # 또는 에러 모델
+        404: {"description": "리소스를 찾을 수 없음 (Not Found)", "model": Response.ErrorResponseModel},
+        500: {"description": "서버 내부 오류 (Internal Server Error)", "model": Response.ErrorResponseModel}
+        # 필요하다면 다른 상태 코드도 추가 (예: 403 Forbidden, 401 Unauthorized 등)
+    })
+def get_event_news_api(query: str, page: int):
+    # SEC에서 데이터 가져오기
+    response = utils.get_event_news_api(query, page)
     return response
 
 @app.get("/getNewsAPI/{query}/{page}", summary="News API를 사용하여 뉴스 정보를 가져옵니다.", response_model=List[Company.NewsAPI], status_code=status.HTTP_200_OK,

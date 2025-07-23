@@ -296,4 +296,3 @@ def get_event_news_api(query: str, page: int):
             status_code=500,
             detail=f"통신 중, 알 수 없는 오류 발생: {e}"
         )
-get_event_news_api('nvidia', 1)

@@ -378,13 +378,13 @@ def get_event_news_api(query: str, page:int):
 
         response = [
             Company.NewsAPI(
-                title=article['title'],
-                url=article['url'],
-                image=article['image'],
-                publish=article['publish'],
-                content=article['content'],
-                source=article['source']
-        )
+                title=article.get('title', ''),
+                url=article.get('url', ''),
+                image=article.get('image') if article.get('image') is not None else '',
+                publish=article.get('publish', ''),
+                content=article.get('content', ''),
+                source=article.get('source', '')
+            )
             for article in res
         ]
         return response

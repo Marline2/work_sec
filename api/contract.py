@@ -236,12 +236,12 @@ def get_headline_news_api(query:str, page: int):
             detail=f"통신 중, 알 수 없는 오류 발생: {e}"
         )
 
-def get_event_news_api(query: str, page: int):
+def get_event_news_api(page: int, query: str):
     #er = EventRegistry(apiKey=event_api_key)
     #q = QueryArticles(conceptUri=er.getConceptUri("finance"), lang="eng", allowUseOfArchive = False)
     request_body = {
             "action": "getArticles",
-            "keyword": query,
+            **({"keyword": query} if query else {}),
             "articlesPage": page,
             "articlesCount": 20,
             "articlesSortBy": "date",
@@ -257,6 +257,10 @@ def get_event_news_api(query: str, page: int):
                 "reuters.com",
                 "benzinga.com",
                 "zacks.com"
+            ],
+            "categoryUri":[
+                "dmoz/Business/Small_Business/Finance",
+                "dmoz/Business/Financial_Services"
             ],
             "isDuplicateFilter":"skipDuplicates",
             "apiKey": event_api_key

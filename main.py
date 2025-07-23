@@ -1,5 +1,5 @@
 from fastapi import FastAPI, status, Path
-from typing import List
+from typing import List, Optional
 
 import api.uitls as utils
 import api.models.Company as Company
@@ -26,7 +26,7 @@ def upload_company_list():
     response = utils.upload_company_list()
     return response
 
-@app.get("/getEventNewsAPI/{query}/{page}", summary="News API를 사용하여 뉴스 정보를 가져옵니다.", response_model=List[Company.NewsAPI], status_code=status.HTTP_200_OK,
+@app.get("/getEventNewsAPI/{page}", summary="News API를 사용하여 뉴스 정보를 가져옵니다.", response_model=List[Company.NewsAPI], status_code=status.HTTP_200_OK,
          responses={
         # 예외 상황을 Swagger UI에 명시
         400: {"description": "잘못된 요청 (Invalid Input)", "model": Response.ErrorResponseModel}, # 또는 에러 모델
@@ -34,9 +34,14 @@ def upload_company_list():
         500: {"description": "서버 내부 오류 (Internal Server Error)", "model": Response.ErrorResponseModel}
         # 필요하다면 다른 상태 코드도 추가 (예: 403 Forbidden, 401 Unauthorized 등)
     })
-def get_event_news_api(query: str, page: int):
+def get_event_news_api(page: int, query: str = None):
     # SEC에서 데이터 가져오기
-    response = utils.get_event_news_api(query, page)
+    """
+        호출 예시:
+        - 검색어 없이:   /getEventNewsAPI/1
+        - 검색어 포함:   /getEventNewsAPI/1?query=검색어
+    """
+    response = utils.get_event_news_api(page, query)
     return response
 
 @app.get("/getNewsAPI/{query}/{page}", summary="News API를 사용하여 뉴스 정보를 가져옵니다.", response_model=List[Company.NewsAPI], status_code=status.HTTP_200_OK,

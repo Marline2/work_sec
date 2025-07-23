@@ -1,10 +1,8 @@
 import requests
 from fastapi import HTTPException
 import yfinance as yf
-import pandas as pd
 from datetime import datetime
-#from api.models.Company import YahooFinClosePrice
-from bs4 import BeautifulSoup
+from api.models.Company import YahooFinClosePrice
 from dotenv import load_dotenv
 from newsapi import NewsApiClient
 from eventregistry import *
@@ -303,4 +301,3 @@ def get_event_news_api(query: str, page: int):
             status_code=500,
             detail=f"통신 중, 알 수 없는 오류 발생: {e}"
         )
-get_event_news_api('nvidia', 1)

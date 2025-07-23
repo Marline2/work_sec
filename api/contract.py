@@ -254,6 +254,13 @@ def get_event_news_api(query: str, page: int):
             "lang":["eng"],
             "forceMaxDataTimeWindow": 31,
             "resultType": "articles",
+            "sourceUri":[
+                "bloomberg.com",
+                "reuters.com",
+                "benzinga.com",
+                "zacks.com"
+            ],
+            "isDuplicateFilter":"skipDuplicates",
             "apiKey": event_api_key
         }
     json_payload = json.dumps(request_body)
@@ -296,3 +303,4 @@ def get_event_news_api(query: str, page: int):
             status_code=500,
             detail=f"통신 중, 알 수 없는 오류 발생: {e}"
         )
+get_event_news_api('nvidia', 1)
